@@ -6,6 +6,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
 import { Card, CardContent } from "../components/ui/card";
+import CardGarcom from "../components/CardGarcom";
 
 export default function FormularioGarcomPro() {
   const [form, setForm] = useState({
@@ -21,6 +22,7 @@ export default function FormularioGarcomPro() {
 
   const [mostrarPreview, setMostrarPreview] = useState(false);
   const previewRef = useRef();
+  const cardRef = useRef();
 
   const gerarFraseAutomatica = () => {
     const frases = [
@@ -71,8 +73,21 @@ export default function FormularioGarcomPro() {
     });
   };
 
+  const baixarCartao = () => {
+    const cardElement = cardRef.current;
+    if (!cardElement) return;
+
+    html2canvas(cardElement, { scale: 2, useCORS: true }).then((canvas) => {
+      const link = document.createElement("a");
+      link.download = "cartao-garcom.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    });
+  };
+
   return (
     <div className="max-w-2xl mx-auto p-4">
+      {/* Formulário de dados */}
       <Card className="p-4">
         <CardContent className="grid gap-4">
           <Input
@@ -129,6 +144,7 @@ export default function FormularioGarcomPro() {
         </CardContent>
       </Card>
 
+      {/* Preview do Currículo e Cartão */}
       {mostrarPreview && (
         <>
           <div ref={previewRef} className="max-w-[480px] mx-auto">
@@ -174,8 +190,23 @@ export default function FormularioGarcomPro() {
             </Card>
           </div>
 
+          {/* Cartão Virtual do Garçom */}
+          <div className="mt-6">
+            <CardGarcom
+              ref={cardRef}
+              nome={form.nome}
+              whatsapp={form.whatsapp}
+              frase={form.frase}
+              foto={form.fotos[0]}
+            />
+          </div>
+
           <Button className="mt-4" onClick={baixarPDF}>
-            Baixar em PDF
+            Baixar Currículo em PDF
+          </Button>
+
+          <Button className="mt-4 ml-2" onClick={baixarCartao}>
+            Baixar Cartão em PNG
           </Button>
         </>
       )}
