@@ -3,9 +3,9 @@ import React, { forwardRef } from "react";
 const CardGarcomPremium = forwardRef(
   (
     {
-      nome = "Seu Nome",
-      whatsapp = "(00) 00000-0000",
-      frase = "Profissional dedicado.",
+      nome,
+      whatsapp,
+      frase,
       foto,
       modelo = "modelo1",
       mini = false,
@@ -15,10 +15,7 @@ const CardGarcomPremium = forwardRef(
   ) => {
     const getEstilos = () => {
       if (isDownload) {
-        return {
-          container: "bg-white text-black",
-          border: "2px solid #ccc",
-        };
+        return { container: "bg-white text-black", border: "2px solid #ccc" };
       }
 
       switch (modelo) {
@@ -34,7 +31,7 @@ const CardGarcomPremium = forwardRef(
               "bg-gradient-to-r from-green-700 via-emerald-500 to-teal-300 text-white",
             border: "3px solid #34d399",
           };
-        default:
+        default: // modelo1
           return {
             container:
               "bg-gradient-to-r from-blue-900 via-blue-700 to-yellow-400 text-white",
@@ -51,11 +48,7 @@ const CardGarcomPremium = forwardRef(
       <div
         ref={ref}
         className={`relative rounded-xl shadow-xl p-4 text-center ${estilos.container}`}
-        style={{
-          width: cardWidth,
-          border: estilos.border,
-          backgroundColor: isDownload ? "#fff" : undefined,
-        }}
+        style={{ width: cardWidth, border: estilos.border }}
       >
         {!mini && !isDownload && (
           <div className="absolute top-2 right-2 bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded-full shadow">
@@ -80,10 +73,14 @@ const CardGarcomPremium = forwardRef(
         )}
 
         <h2 className={`font-extrabold ${mini ? "text-sm" : "text-xl"}`}>
-          {nome}
+          {nome || "Seu Nome"}
         </h2>
-        <p className={`italic ${mini ? "text-xs" : "text-sm"} mt-1`}>{frase}</p>
-        <p className={`${mini ? "text-xs" : "text-lg"} mt-1`}>📱 {whatsapp}</p>
+        <p className={`italic ${mini ? "text-xs" : "text-sm"} mt-1`}>
+          {frase || "Profissional dedicado."}
+        </p>
+        <p className={`${mini ? "text-xs" : "text-lg"} mt-1`}>
+          📱 {whatsapp || "(00) 00000-0000"}
+        </p>
       </div>
     );
   }

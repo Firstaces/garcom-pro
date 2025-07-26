@@ -1,33 +1,59 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import CardGarcomPremium from "../components/CardGarcomPremium";
+import CurriculoPremium from "../components/CurriculoPremium";
 
 export default function Premium() {
   const [senha, setSenha] = useState("");
   const [acessoLiberado, setAcessoLiberado] = useState(false);
   const [erro, setErro] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     nome: "",
+    cidade: "",
     whatsapp: "",
+    experiencia: "",
+    eventos: "",
+    habilidades: "",
     frase: "",
     foto: null,
     modelo: "modelo1",
   });
 
-  const verificarSenha = () => {
-    if (senha === "souvippro") {
-      setAcessoLiberado(true);
-      setErro("");
-    } else {
-      setErro("Senha incorreta. Tente novamente.");
+  const cardRef = useRef();
+  const curriculoRef = useRef();
+
+  // Verificar senha via API
+  const verificarSenha = async () => {
+    setLoading(true);
+    setErro("");
+    try {
+      const res = await fetch("/api/validar-senha", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ senha }),
+      });
+
+      const data = await res.json();
+      if (data.ok) {
+        setAcessoLiberado(true);
+        setErro("");
+      } else {
+        setErro("Senha incorreta. Tente novamente.");
+      }
+    } catch (error) {
+      console.error(error);
+      setErro("Erro ao validar senha.");
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Captura de campos
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-
     if (name === "foto") {
       const file = files?.[0];
       if (file) {
@@ -37,93 +63,77 @@ export default function Premium() {
         };
         reader.readAsDataURL(file);
       }
-      return;
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
     }
-
-    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const selecionarModelo = (modelo) => {
     setForm((prev) => ({ ...prev, modelo }));
   };
 
-  /** Gera PDF capturando o card visível */
-  const gerarPDF = async (preview = false) => {
-    const cardElement = document.querySelector("#card-preview");
-    if (!cardElement) {
-      alert("Cartão não encontrado.");
-      return;
-    }
-
-    try {
-      // Delay para garantir renderização
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      const canvas = await html2canvas(cardElement, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-      });
-
-      const imgData = canvas.toDataURL("image/jpeg", 1.0);
-      const pdf = new jsPDF({
-        orientation: "landscape",
-        unit: "mm",
-        format: [90, 50],
-      });
-
-      pdf.addImage(imgData, "JPEG", 0, 0, 90, 50);
-
-      if (preview) {
-        window.open(pdf.output("bloburl"), "_blank");
-      } else {
-        pdf.save("cartao-virtual-garcom.pdf");
-      }
-    } catch (error) {
-      console.error("Erro ao gerar o PDF:", error);
-      alert("Erro ao gerar PDF. Veja o console.");
-    }
-  };
-
+  // Baixar Card como PNG
   const baixarPNG = async () => {
     const cardElement = document.querySelector("#card-preview");
     if (!cardElement) {
       alert("Cartão não encontrado.");
       return;
     }
-
     try {
-      // dá um tempinho pra foto/render finalizar
-      await new Promise((r) => setTimeout(r, 300));
-
       const canvas = await html2canvas(cardElement, {
-        scale: 3, // qualidade alta
+        scale: 3,
         useCORS: true,
         backgroundColor: "#ffffff",
       });
-
-      const dataUrl = canvas.toDataURL("image/png");
-
       const link = document.createElement("a");
-      link.href = dataUrl;
+      link.href = canvas.toDataURL("image/png");
       link.download = "cartao-virtual-garcom.png";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } catch (err) {
-      console.error("Erro ao gerar PNG:", err);
-      alert("Falha ao gerar PNG. Veja o console.");
+    } catch (error) {
+      console.error("Erro ao gerar PNG:", error);
+      alert("Erro ao gerar PNG. Veja o console.");
     }
   };
 
-  const nomeSafe = form.nome?.trim() || "Seu Nome";
-  const fraseSafe = form.frase?.trim() || "Profissional dedicado.";
-  const whatsappSafe = form.whatsapp?.trim() || "(00) 00000-0000";
+  // Baixar Currículo Premium PDF
+  const baixarPDFPremium = async () => {
+    if (!curriculoRef.current) {
+      alert("Currículo não encontrado.");
+      return;
+    }
+    try {
+      const canvas = await html2canvas(curriculoRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+      });
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgData = canvas.toDataURL("image/jpeg", 1.0);
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const ratio = Math.min(
+        pageWidth / canvas.width,
+        pageHeight / canvas.height
+      );
+      const pdfWidth = canvas.width * ratio;
+      const pdfHeight = canvas.height * ratio;
+      pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save("curriculo-premium.pdf");
+    } catch (error) {
+      console.error("Erro ao gerar PDF:", error);
+      alert("Erro ao gerar PDF. Veja o console.");
+    }
+  };
+
+  const nomeSafe = form.nome || "Seu Nome";
+  const fraseSafe = form.frase || "Profissional dedicado.";
+  const whatsappSafe = form.whatsapp || "(00) 00000-0000";
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-4 py-8 bg-gray-100">
       {!acessoLiberado ? (
-        /* Tela de senha */
         <div className="w-full max-w-sm text-center bg-white p-6 rounded-lg shadow-md">
           <h1 className="text-2xl font-bold mb-4">Acesso VIP</h1>
           <p className="mb-4">
@@ -139,70 +149,82 @@ export default function Premium() {
           <button
             onClick={verificarSenha}
             className="w-full mt-4 bg-blue-600 text-white font-semibold py-2 rounded hover:bg-blue-700 transition"
+            disabled={loading}
           >
-            Entrar
+            {loading ? "Verificando..." : "Entrar"}
           </button>
           {erro && <p className="text-red-500 mt-2">{erro}</p>}
         </div>
       ) : (
-        /* Conteúdo Premium */
-        <div className="w-full max-w-6xl bg-transparent mx-auto">
+        <div className="w-full max-w-6xl mx-auto">
           <h2 className="text-2xl font-bold mb-6 text-center text-green-600">
             🎉 Conteúdo Premium Liberado!
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Coluna Esquerda */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <ul className="mb-6 space-y-2 text-left">
-                <li>
-                  ✅ Acesso à <strong>IA</strong>:{" "}
-                  <a
-                    href="https://chatgpt.com/g/g-6880df1c02588191b8c0e40c2d3ddd33-garcom-pro-ia"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 underline"
-                  >
-                    Garçom Pro IA
-                  </a>
-                </li>
-                <li>
-                  📄 Dicas de Postura –{" "}
-                  <a
-                    href="/pdfs/dicas-comportamento.pdf"
-                    target="_blank"
-                    className="text-blue-600 underline"
-                  >
-                    Baixar
-                  </a>
-                </li>
-                <li>
-                  💬 Frases Profissionais –{" "}
-                  <a
-                    href="/pdfs/frases-apresentacao.pdf"
-                    target="_blank"
-                    className="text-blue-600 underline"
-                  >
-                    Baixar
-                  </a>
-                </li>
-                <li>
-                  ✨ Checklist Eventos –{" "}
-                  <a
-                    href="/pdfs/checklist-eventos.pdf"
-                    target="_blank"
-                    className="text-blue-600 underline"
-                  >
-                    Baixar
-                  </a>
-                </li>
-              </ul>
+          {/* Recursos Exclusivos */}
+          <div className="bg-white p-4 rounded-lg shadow mb-6 text-center">
+            <h3 className="text-lg font-bold text-green-600 mb-2">
+              Recursos Exclusivos Premium
+            </h3>
+            <ul className="space-y-2 text-gray-700">
+              <li>
+                ✅ Acesso ao <strong>Agente de IA:</strong>{" "}
+                <a
+                  href="https://chatgpt.com/g/g-6880df1c02588191b8c0e40c2d3ddd33-garcom-pro-ia"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline"
+                >
+                  Garçom Pro IA
+                </a>
+              </li>
+              <li>
+                📄 PDF:{" "}
+                <a
+                  href="/pdfs/dicas-comportamento.pdf"
+                  target="_blank"
+                  className="text-blue-600 underline"
+                >
+                  Dicas de Postura Profissional
+                </a>
+              </li>
+              <li>
+                💬 PDF:{" "}
+                <a
+                  href="/pdfs/frases-apresentacao.pdf"
+                  target="_blank"
+                  className="text-blue-600 underline"
+                >
+                  Frases Profissionais para Currículo
+                </a>
+              </li>
+              <li>
+                ✨ PDF:{" "}
+                <a
+                  href="/pdfs/checklist-eventos.pdf"
+                  target="_blank"
+                  className="text-blue-600 underline"
+                >
+                  Checklist Eventos
+                </a>
+              </li>
+            </ul>
+          </div>
 
-              {/* Formulário */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Formulário */}
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-lg font-bold mb-4">Preencha seus dados:</h3>
               <div className="space-y-3 mb-6">
                 <input
                   name="nome"
                   placeholder="Nome completo"
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border rounded"
+                />
+                <input
+                  name="cidade"
+                  placeholder="Cidade/Estado"
                   onChange={handleChange}
                   className="w-full px-3 py-2 border rounded"
                 />
@@ -213,16 +235,30 @@ export default function Premium() {
                   className="w-full px-3 py-2 border rounded"
                 />
                 <input
+                  name="experiencia"
+                  placeholder="Anos de experiência"
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border rounded"
+                />
+                <input
+                  name="eventos"
+                  placeholder="Tipos de eventos"
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border rounded"
+                />
+                <input
+                  name="habilidades"
+                  placeholder="Três habilidades (separadas por vírgula)"
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border rounded"
+                />
+                <input
                   name="frase"
                   placeholder="Frase de apresentação"
                   onChange={handleChange}
                   className="w-full px-3 py-2 border rounded"
                 />
-
-                <label className="block mb-1 text-sm font-semibold">
-                  Foto do Garçom ou Evento
-                </label>
-
+                <label className="block mt-2 text-sm font-semibold">Foto</label>
                 <input
                   name="foto"
                   type="file"
@@ -233,7 +269,9 @@ export default function Premium() {
               </div>
 
               {/* Modelos */}
-              <h3 className="text-lg font-bold mb-2">Escolha o modelo:</h3>
+              <h3 className="text-lg font-bold mb-4 text-center">
+                Escolha o modelo do Cartão Virtual
+              </h3>
               <div className="flex justify-center gap-4 mb-6">
                 {["modelo1", "modelo2", "modelo3"].map((modelo) => (
                   <div
@@ -247,50 +285,26 @@ export default function Premium() {
                   >
                     <CardGarcomPremium
                       mini
-                      nome={nomeSafe}
-                      whatsapp={whatsappSafe}
-                      frase={fraseSafe}
-                      foto={form.foto}
+                      nome="Exemplo"
+                      whatsapp="(00) 00000-0000"
+                      frase="Visual do cartão"
                       modelo={modelo}
+                      foto={null}
                     />
-                    <p className="text-xs mt-1 text-center capitalize">
-                      {modelo}
-                    </p>
                   </div>
                 ))}
               </div>
-
-              {/* Botões */}
-              <div className="flex flex-wrap gap-4 justify-center">
-                <button
-                  onClick={() => gerarPDF(true)}
-                  className="bg-gray-300 text-black px-4 py-2 rounded shadow hover:bg-gray-400"
-                >
-                  Pré-visualizar PDF 👁️
-                </button>
-                <button
-                  onClick={() => gerarPDF(false)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
-                >
-                  Baixar PDF 📥
-                </button>
-                <button
-                  onClick={baixarPNG}
-                  className="bg-emerald-600 text-white px-4 py-2 rounded shadow hover:bg-emerald-700"
-                >
-                  Baixar PNG 📸
-                </button>
-              </div>
             </div>
 
-            {/* Coluna Direita (preview) */}
+            {/* Pré-visualizações */}
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h3 className="text-lg font-bold mb-4 text-center">
-                Pré-visualização
+                Cartão Virtual
               </h3>
-              <div className="flex justify-center">
+              <div className="flex justify-center mb-4">
                 <div id="card-preview">
                   <CardGarcomPremium
+                    ref={cardRef}
                     nome={nomeSafe}
                     whatsapp={whatsappSafe}
                     frase={fraseSafe}
@@ -299,9 +313,37 @@ export default function Premium() {
                   />
                 </div>
               </div>
-              <p className="text-sm text-gray-500 mt-6 text-center">
-                O PDF será gerado com esse layout.
-              </p>
+              <button
+                onClick={baixarPNG}
+                className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 w-full"
+              >
+                Baixar Cartão PNG 📸
+              </button>
+
+              {/* Currículo Premium */}
+              <h3 className="text-lg font-bold mt-6 mb-4 text-center text-yellow-600">
+                Currículo Premium
+              </h3>
+              <div ref={curriculoRef}>
+                <CurriculoPremium
+                  nome={form.nome}
+                  cidade={form.cidade}
+                  whatsapp={form.whatsapp}
+                  experiencia={form.experiencia}
+                  eventos={form.eventos}
+                  habilidades={form.habilidades}
+                  frase={form.frase}
+                  foto={form.foto}
+                />
+              </div>
+              <div className="flex gap-4 mt-4">
+                <button
+                  onClick={baixarPDFPremium}
+                  className="bg-yellow-500 text-white px-4 py-2 rounded shadow hover:bg-yellow-600 w-full"
+                >
+                  Baixar Currículo PDF 📝
+                </button>
+              </div>
             </div>
           </div>
         </div>

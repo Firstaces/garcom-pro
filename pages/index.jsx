@@ -19,6 +19,58 @@ export default function Home() {
             Criar meu currículo agora
           </Button>
         </Link>
+
+        <Link href="/pagamento">
+          <Button className="text-lg px-6 py-3 bg-yellow-500 text-white font-semibold hover:bg-yellow-600 mt-4">
+            Quero ser Premium ⭐
+          </Button>
+        </Link>
+      </section>
+
+      {/* Seção Premium */}
+      <section className="py-12 px-6 bg-yellow-50 text-center">
+        <h2 className="text-3xl font-bold text-yellow-700 mb-6">
+          Torne-se Garçom Pro Premium!
+        </h2>
+        <p className="text-lg text-gray-700 max-w-2xl mx-auto mb-8">
+          Aumente suas chances de conquistar eventos com um currículo
+          profissional, cartão virtual moderno e acesso exclusivo à nossa
+          inteligência artificial. Tudo por apenas{" "}
+          <span className="font-bold text-green-600">R$ 19,90</span>.
+        </p>
+
+        {/* Tópicos Premium */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-8">
+          <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition">
+            <p className="text-2xl mb-2">📄</p>
+            <h3 className="font-bold text-lg mb-2">Currículo em PDF</h3>
+            <p className="text-gray-600 text-sm">
+              Baixe um currículo estiloso e pronto para enviar por WhatsApp.
+            </p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition">
+            <p className="text-2xl mb-2">💬</p>
+            <h3 className="font-bold text-lg mb-2">Agente de IA</h3>
+            <p className="text-gray-600 text-sm">
+              Tenha sugestões de frases e dicas para impressionar contratantes.
+            </p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition">
+            <p className="text-2xl mb-2">🎟️</p>
+            <h3 className="font-bold text-lg mb-2">Cartão Virtual</h3>
+            <p className="text-gray-600 text-sm">
+              Crie seu cartão virtual exclusivo para eventos e festas.
+            </p>
+          </div>
+        </div>
+
+        {/* CTA Premium */}
+        <a
+          href="/pagamento"
+          className="inline-block bg-yellow-500 text-white font-bold px-6 py-3 rounded-lg shadow hover:bg-yellow-600 transition"
+        >
+          Quero ser Premium ⭐
+        </a>
       </section>
 
       {/* Benefícios */}
