@@ -179,33 +179,13 @@ export default function Premium() {
                 </a>
               </li>
               <li>
-                📄 PDF:{" "}
-                <a
-                  href="/pdfs/dicas-comportamento.pdf"
-                  target="_blank"
-                  className="text-blue-600 underline"
-                >
-                  Dicas de Postura Profissional
-                </a>
-              </li>
-              <li>
                 💬 PDF:{" "}
                 <a
-                  href="/pdfs/frases-apresentacao.pdf"
+                  href="/pdfs/Garcom-Pro-Premium.pdf"
                   target="_blank"
                   className="text-blue-600 underline"
                 >
-                  Frases Profissionais para Currículo
-                </a>
-              </li>
-              <li>
-                ✨ PDF:{" "}
-                <a
-                  href="/pdfs/checklist-eventos.pdf"
-                  target="_blank"
-                  className="text-blue-600 underline"
-                >
-                  Checklist Eventos
+                  E-book
                 </a>
               </li>
             </ul>

@@ -15,7 +15,7 @@ export default function Pagamento() {
         <p className="text-lg text-gray-600 mb-4">
           Conquiste eventos com um currículo e cartão virtual de respeito!
         </p>
-        <p className="text-2xl font-bold text-green-600 mb-4">R$ 19,90</p>
+        <p className="text-2xl font-bold text-green-600 mb-4">R$ 29</p>
 
         {/* Chave Pix */}
         <div className="bg-gray-100 p-4 rounded mb-4">
