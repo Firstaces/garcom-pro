@@ -36,7 +36,7 @@ export default function Home() {
           Aumente suas chances de conquistar eventos com um currículo
           profissional, cartão virtual moderno e acesso exclusivo à nossa
           inteligência artificial. Tudo por apenas{" "}
-          <span className="font-bold text-green-600">R$ 19,90</span>.
+          <span className="font-bold text-green-600">R$ 29</span>.
         </p>
 
         {/* Tópicos Premium */}
