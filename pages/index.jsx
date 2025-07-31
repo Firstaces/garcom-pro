@@ -27,6 +27,20 @@ export default function Home() {
         </Link>
       </section>
 
+      {/* Chamada para Vitrine de Garçons */}
+      <section className="py-12 px-6 bg-gray-50 text-center">
+        <h2 className="text-2xl font-bold mb-4">📍 Vitrine de Garçons</h2>
+        <p className="text-gray-700 mb-6 max-w-2xl mx-auto">
+          Quer ser encontrado por quem está contratando? Crie seu perfil
+          gratuito e apareça na nossa vitrine profissional.
+        </p>
+        <Link href="/VitrineGarcons">
+          <Button className="bg-green-600 text-white font-semibold px-6 py-3 hover:bg-green-700">
+            Quero aparecer na vitrine!
+          </Button>
+        </Link>
+      </section>
+
       {/* Seção Premium */}
       <section className="py-12 px-6 bg-yellow-50 text-center">
         <h2 className="text-3xl font-bold text-yellow-700 mb-6">
