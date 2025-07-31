@@ -1,4 +1,4 @@
-// Página principal: Vitrine de Garçons + Cadastro com comparação
+// Página principal: Vitrine de Garçons + Cadastro com LocalStorage
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -25,14 +25,7 @@ const garconsMock = [
 
 export default function VitrineGarcons() {
   const [filtro, setFiltro] = useState("");
-  const [garcons, setGarcons] = useState(garconsMock);
-
-  const garconsFiltrados = garcons.filter(
-    (g) =>
-      g.cidade.toLowerCase().includes(filtro.toLowerCase()) ||
-      g.bairro.toLowerCase().includes(filtro.toLowerCase())
-  );
-
+  const [garcons, setGarcons] = useState([]);
   const [novoGarcom, setNovoGarcom] = useState({
     nome: "",
     cidade: "",
@@ -40,6 +33,27 @@ export default function VitrineGarcons() {
     experiencia: "",
     premium: false,
   });
+
+  // Carregar do localStorage ao iniciar
+  useEffect(() => {
+    const dadosSalvos = localStorage.getItem("garcons");
+    if (dadosSalvos) {
+      setGarcons(JSON.parse(dadosSalvos));
+    } else {
+      setGarcons(garconsMock);
+    }
+  }, []);
+
+  // Salvar no localStorage sempre que atualizar
+  useEffect(() => {
+    localStorage.setItem("garcons", JSON.stringify(garcons));
+  }, [garcons]);
+
+  const garconsFiltrados = garcons.filter(
+    (g) =>
+      g.cidade.toLowerCase().includes(filtro.toLowerCase()) ||
+      g.bairro.toLowerCase().includes(filtro.toLowerCase())
+  );
 
   function handleCadastro() {
     setGarcons((prev) => [...prev, novoGarcom]);
