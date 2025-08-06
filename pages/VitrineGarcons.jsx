@@ -1,53 +1,36 @@
-// Página principal: Vitrine de Garçons + Cadastro com LocalStorage
+// 📄 pages/VitrineGarcons.jsx
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "../components/ui/dialog";
 import { Label } from "../components/ui/label";
-
-const garconsMock = [
-  {
-    nome: "Carlos Oliveira",
-    cidade: "Rio de Janeiro",
-    bairro: "Realengo",
-    experiencia: "5 anos em casamentos e festas corporativas",
-    premium: true,
-  },
-  {
-    nome: "Fernanda Lima",
-    cidade: "São Paulo",
-    bairro: "Zona Sul",
-    experiencia: "2 anos em aniversários infantis",
-    premium: false,
-  },
-];
+import { buscarGarcons, cadastrarGarcom } from "../lib/garcons";
 
 export default function VitrineGarcons() {
   const [filtro, setFiltro] = useState("");
   const [garcons, setGarcons] = useState([]);
+  const [carregando, setCarregando] = useState(true);
   const [novoGarcom, setNovoGarcom] = useState({
     nome: "",
     cidade: "",
     bairro: "",
     experiencia: "",
+    telefone: "",
+    email: "",
+    instagram: "",
     premium: false,
   });
 
-  // Carregar do localStorage ao iniciar
   useEffect(() => {
-    const dadosSalvos = localStorage.getItem("garcons");
-    if (dadosSalvos) {
-      setGarcons(JSON.parse(dadosSalvos));
-    } else {
-      setGarcons(garconsMock);
-    }
+    const carregarGarcons = async () => {
+      setCarregando(true);
+      const lista = await buscarGarcons();
+      setGarcons(lista);
+      setCarregando(false);
+    };
+    carregarGarcons();
   }, []);
-
-  // Salvar no localStorage sempre que atualizar
-  useEffect(() => {
-    localStorage.setItem("garcons", JSON.stringify(garcons));
-  }, [garcons]);
 
   const garconsFiltrados = garcons.filter(
     (g) =>
@@ -55,15 +38,22 @@ export default function VitrineGarcons() {
       g.bairro.toLowerCase().includes(filtro.toLowerCase())
   );
 
-  function handleCadastro() {
-    setGarcons((prev) => [...prev, novoGarcom]);
+  async function handleCadastro() {
+    await cadastrarGarcom(novoGarcom);
+    const atualizada = await buscarGarcons();
+    setGarcons(atualizada);
+
     setNovoGarcom({
       nome: "",
       cidade: "",
       bairro: "",
       experiencia: "",
+      telefone: "",
+      email: "",
+      instagram: "",
       premium: false,
     });
+
     alert("Cadastro enviado com sucesso! 🎉");
   }
 
@@ -80,27 +70,31 @@ export default function VitrineGarcons() {
         className="mb-4"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {garconsFiltrados.map((g, index) => (
-          <Card
-            key={index}
-            className={g.premium ? "border-2 border-yellow-500" : ""}
-          >
-            <CardContent className="p-4">
-              <h2 className="text-xl font-semibold">{g.nome}</h2>
-              <p className="text-sm">
-                📍 {g.bairro}, {g.cidade}
-              </p>
-              <p className="mt-2 text-gray-600">{g.experiencia}</p>
-              {g.premium && (
-                <span className="text-yellow-600 font-bold">
-                  ⭐ Garçom Pro Premium
-                </span>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {carregando ? (
+        <p className="text-center text-gray-500">Carregando garçons...</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {garconsFiltrados.map((g, index) => (
+            <Card
+              key={index}
+              className={g.premium ? "border-2 border-yellow-500" : ""}
+            >
+              <CardContent className="p-4">
+                <h2 className="text-xl font-semibold">{g.nome}</h2>
+                <p className="text-sm">
+                  📍 {g.bairro}, {g.cidade}
+                </p>
+                <p className="mt-2 text-gray-600">{g.experiencia}</p>
+                {g.premium && (
+                  <span className="text-yellow-600 font-bold">
+                    ⭐ Garçom Pro Premium
+                  </span>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <div className="text-center mt-6">
         <p className="mb-2">É garçom freelancer e quer aparecer aqui?</p>
@@ -150,6 +144,35 @@ export default function VitrineGarcons() {
                   }
                 />
               </div>
+              <div>
+                <Label>Telefone (WhatsApp)</Label>
+                <Input
+                  value={novoGarcom.telefone}
+                  onChange={(e) =>
+                    setNovoGarcom({ ...novoGarcom, telefone: e.target.value })
+                  }
+                />
+              </div>
+
+              <div>
+                <Label>E-mail (opcional)</Label>
+                <Input
+                  value={novoGarcom.email}
+                  onChange={(e) =>
+                    setNovoGarcom({ ...novoGarcom, email: e.target.value })
+                  }
+                />
+              </div>
+
+              <div>
+                <Label>Instagram (opcional)</Label>
+                <Input
+                  value={novoGarcom.instagram}
+                  onChange={(e) =>
+                    setNovoGarcom({ ...novoGarcom, instagram: e.target.value })
+                  }
+                />
+              </div>
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -170,38 +193,6 @@ export default function VitrineGarcons() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
-
-      <div className="mt-12">
-        <h2 className="text-2xl font-bold text-center mb-4">
-          Comparativo de Visibilidade
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <h3 className="text-lg font-semibold mb-2">Perfil Gratuito</h3>
-              <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                <li>Nome, cidade e bairro visíveis</li>
-                <li>Experiência resumida</li>
-                <li>Posição padrão na vitrine</li>
-              </ul>
-            </CardContent>
-          </Card>
-          <Card className="border-yellow-500 border-2">
-            <CardContent className="p-4">
-              <h3 className="text-lg font-semibold text-yellow-600 mb-2">
-                Perfil Premium ⭐
-              </h3>
-              <ul className="list-disc list-inside text-sm text-gray-800 space-y-1">
-                <li>Perfil em destaque no topo</li>
-                <li>Cartão virtual com link personalizado</li>
-                <li>Currículo Profissional</li>
-                <li>Texto de apresentação escrito por IA</li>
-                <li>Mais chances de ser contratado</li>
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   );
