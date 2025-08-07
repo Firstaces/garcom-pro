@@ -9,6 +9,7 @@ import { buscarGarcons, cadastrarGarcom } from "../lib/garcons";
 export default function VitrineGarcons() {
   const [filtro, setFiltro] = useState("");
   const [garcons, setGarcons] = useState([]);
+
   const [novoGarcom, setNovoGarcom] = useState({
     nome: "",
     cidade: "",
@@ -17,8 +18,12 @@ export default function VitrineGarcons() {
     telefone: "",
     email: "",
     instagram: "",
-    premium: false,
   });
+
+  // --- estados para premium ---
+  const [premiumCode, setPremiumCode] = useState("");
+  const [premiumOk, setPremiumOk] = useState(false);
+  const [checkingPremium, setCheckingPremium] = useState(false);
 
   useEffect(() => {
     async function carregar() {
@@ -30,12 +35,43 @@ export default function VitrineGarcons() {
 
   const garconsFiltrados = garcons.filter(
     (g) =>
-      g.cidade.toLowerCase().includes(filtro.toLowerCase()) ||
-      g.bairro.toLowerCase().includes(filtro.toLowerCase())
+      (g.cidade || "").toLowerCase().includes(filtro.toLowerCase()) ||
+      (g.bairro || "").toLowerCase().includes(filtro.toLowerCase())
   );
 
+  async function validarPremium() {
+    try {
+      setCheckingPremium(true);
+      const res = await fetch("/api/validar-senha", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ senha: premiumCode }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setPremiumOk(true);
+        alert("Código Premium validado! ✅");
+      } else {
+        setPremiumOk(false);
+        alert("Código inválido. ❌");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Erro ao validar código. Tente novamente.");
+    } finally {
+      setCheckingPremium(false);
+    }
+  }
+
   async function handleCadastro() {
-    await cadastrarGarcom(novoGarcom);
+    const payload = {
+      ...novoGarcom,
+      premium: premiumOk, // 👈 só vira true se validou o código
+    };
+
+    await cadastrarGarcom(payload);
+
+    // reset
     setNovoGarcom({
       nome: "",
       cidade: "",
@@ -44,8 +80,10 @@ export default function VitrineGarcons() {
       telefone: "",
       email: "",
       instagram: "",
-      premium: false,
     });
+    setPremiumCode("");
+    setPremiumOk(false);
+
     alert("Cadastro enviado com sucesso! 🎉");
 
     const atualizados = await buscarGarcons();
@@ -151,7 +189,7 @@ export default function VitrineGarcons() {
                 />
               </div>
               <div>
-                <Label>Telefone</Label>
+                <Label>Telefone (WhatsApp)</Label>
                 <Input
                   value={novoGarcom.telefone}
                   onChange={(e) =>
@@ -177,16 +215,37 @@ export default function VitrineGarcons() {
                   }
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={novoGarcom.premium}
-                  onChange={(e) =>
-                    setNovoGarcom({ ...novoGarcom, premium: e.target.checked })
-                  }
-                />
-                <Label>Sou assinante Premium</Label>
+
+              {/* Código Premium */}
+              <div>
+                <Label>Código Premium (opcional)</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={premiumCode}
+                    onChange={(e) => setPremiumCode(e.target.value)}
+                    placeholder="Digite seu código"
+                    disabled={premiumOk}
+                  />
+                  <Button
+                    type="button"
+                    onClick={validarPremium}
+                    disabled={checkingPremium || premiumOk}
+                  >
+                    {premiumOk
+                      ? "Validado ✅"
+                      : checkingPremium
+                      ? "Validando..."
+                      : "Validar"}
+                  </Button>
+                </div>
+                {!premiumOk && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Não tem código? Você pode se cadastrar no plano gratuito
+                    normalmente.
+                  </p>
+                )}
               </div>
+
               <Button
                 type="button"
                 onClick={handleCadastro}
